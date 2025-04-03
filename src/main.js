@@ -26,8 +26,10 @@ tabsWatch.click(".tab")((index, R) => {
   R.class.add("active");
   R.parent.data.set("active", index);
 });
+console.log("tabsWatch root:", tabsWatch.root);
 
 tabsWatch.watch("active", (value, R) => {
+  console.log("tabsWatch watch:", value);
   R.q(".tab-contents > div").class.add("hidden");
   R.q(".tab-contents > div").eq(value).class.remove("hidden");
 });
@@ -83,10 +85,7 @@ removeProduct.click()((index) => {
   }
 });
 
-const basketCount = new Recipe(".basket-count");
-
-console.log(basket);
-
 basket.watch("length", (value, R) => {
-  basketCount.text("count", value);
+  console.log("basket length", R);
+  R.q(".product-basket").text("count", value);
 });

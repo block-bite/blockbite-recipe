@@ -9,8 +9,19 @@ export class Recipe {
       this._useLocalStorage = options.localStorage || false;
 
       this.store = this._initStore(dataOrSetup);
+
+      // Optional API sugar for external watching
+
+      this.watch = (key, fn) => {
+        this._storeWatchers ??= {};
+        this._storeWatchers[key] ??= [];
+        this._storeWatchers[key].push(fn);
+      };
+
       Recipe.store.set(this._storeName, this.store);
-      return; // skip the rest
+      Recipe._storeInstanceMap ??= new Map();
+      Recipe._storeInstanceMap.set(this._storeName, this);
+      return;
     }
 
     // Handle normal DOM component
@@ -23,12 +34,25 @@ export class Recipe {
     this.store = new Proxy(
       {},
       {
-        set: (obj, key, value) => {
-          obj[key] = value;
-          if (this.watchers[key]) {
-            const runtime = this._getRuntime(this.root);
-            this.watchers[key](value, runtime);
+        set: (obj, prop, value) => {
+          obj[prop] = value;
+
+          if (!isNaN(prop) || prop === "length") {
+            this._saveStore(obj);
+
+            // Trigger loop reactivity
+            subscribers.forEach((fn) => fn(obj));
+
+            // 🔥 Trigger external watchers
+            const instance = Recipe._storeInstanceMap?.get(this._storeName);
+            const externalWatchers = instance?._storeWatchers?.[prop];
+            if (externalWatchers) {
+              externalWatchers.forEach((fn) => {
+                fn(value, instance._getRuntime?.(document.body));
+              });
+            }
           }
+
           return true;
         },
         get: (obj, key) => obj[key],
@@ -37,6 +61,16 @@ export class Recipe {
 
     // Defer queue execution
     setTimeout(() => this._runQueue(), 0);
+  }
+
+  text(key, value) {
+    const target =
+      this.root.querySelector(`[r-text="${key}"]`) ||
+      this.root.querySelector(`[data-r-text="${key}"]`);
+
+    if (target) {
+      target.textContent = value;
+    }
   }
 
   loop() {
@@ -127,10 +161,17 @@ export class Recipe {
       set: (obj, prop, value) => {
         obj[prop] = value;
 
-        // Trigger reactivity only on meaningful changes
         if (!isNaN(prop) || prop === "length") {
           this._saveStore(obj);
           subscribers.forEach((fn) => fn(obj));
+
+          //  Trigger external watchers
+          const watchers = this._storeWatchers?.[prop];
+          if (watchers) {
+            watchers.forEach((fn) => {
+              fn(value, this._getRuntime?.(document.body));
+            });
+          }
         }
 
         return true;
@@ -221,8 +262,10 @@ export class Recipe {
         remove: (cls) => el.classList.remove(cls),
       },
       q(selector) {
-        return wrap(ctx.root.querySelectorAll(selector));
+        const base = ctx.root || document; // fallback!
+        return wrap(base.querySelectorAll(selector));
       },
+
       parent: {
         data: {
           set: (key, value) => {
@@ -270,7 +313,18 @@ function wrap(elements) {
           add: (cls) => el?.classList.add(cls),
           remove: (cls) => el?.classList.remove(cls),
         },
+        text: (key, value) => {
+          const target =
+            el?.querySelector(`[r-text="${key}"]`) ||
+            el?.querySelector(`[data-r-text="${key}"]`);
+          if (target) target.textContent = value;
+        },
       };
+    },
+    text: (key, value) => {
+      elements.forEach((el) => {
+        el.textContent = value;
+      });
     },
   };
 }
