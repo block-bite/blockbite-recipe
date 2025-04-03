@@ -39,18 +39,27 @@
 
   
       <div class="mt-6 flex space-x-4">
-        <button class="add-to-cart bg-blue-600 text-white px-4 py-2 hover:bg-blue-200 rounded">Add to Cart</button>
+        <button class="add-product bg-blue-600 text-white px-4 py-2 hover:bg-blue-200 rounded">Add Person</button>
+        <button class="remove-product bg-red-600 text-white px-4 py-2 hover:bg-red-200 rounded">Remove Person</button>
         <button class="bookmark text-gray-600 hover:opacity-75 px-4 py-2 border rounded">Bookmark</button>
       </div>
     </div>
-  
-    <div class="max-w-2xl mx-auto mt-8">
-      <h2 class="text-xl font-bold mb-2">Related Products</h2>
-      <ul class="grid grid-cols-2 gap-4">
-        <li class="bg-white p-4 shadow rounded">Product A</li>
-        <li class="bg-white p-4 shadow rounded">Product B</li>
-      </ul>
+    <!-- Dynamic Count Binding -->
+    <div class="mt-4 ">
+      Items in basket: <span class="product-basket" r-text="count">0</span>
     </div>
+
+
+    <div class="products-grid grid-cols-3 container mx-auto gap-4 grid">
+      <div r-loop>
+        <div class="product bg-white p-4 rounded shadow">
+          <span r-text="name"></span>
+          <button class="add-to-cart hover:opacity-75 bg-blue-200 p-4 rounded-xl">Add</button>
+        </div>
+      </div>
+    </div>
+    
+
   
     <!-- Toast -->
     <div class="toast fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow hidden">
@@ -58,10 +67,7 @@
     </div>
   
 
-    <!-- Dynamic Count Binding -->
-    <div class="mt-4">
-      Items in basket: <span data-recipe-id="count">0</span>
-    </div>
+   
 
     <script type="module" src="/src/main.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
