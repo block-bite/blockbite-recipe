@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+
+  <body class="p-6 bg-gray-100 font-sans">
+
+    <div class="max-w-2xl mx-auto bg-white p-4 rounded shadow">
+      <h1 class="text-2xl font-bold mb-4">Awesome Product</h1>
+  
+      <div class="tab-group flex space-x-2 mb-4">
+        <button class="tab bg-gray-200">Tab 1</button>
+        <button class="tab bg-gray-200">Tab 2</button>
+        
+      </div>
+      <div class="tab-contents">
+        <div id="tab1" class="tab-content">Content for tab 1</div>
+        <div id="tab2" class="tab-content hidden">Content for tab 2</div>
+      </div>
+  
+      <div class="mt-6 flex space-x-4">
+        <button class="add-to-cart bg-blue-600 text-white px-4 py-2 hover:bg-blue-200 rounded">Add to Cart</button>
+        <button class="bookmark text-gray-600 hover:opacity-75 px-4 py-2 border rounded">Bookmark</button>
+      </div>
+    </div>
+  
+    <div class="max-w-2xl mx-auto mt-8">
+      <h2 class="text-xl font-bold mb-2">Related Products</h2>
+      <ul class="grid grid-cols-2 gap-4">
+        <li class="bg-white p-4 shadow rounded">Product A</li>
+        <li class="bg-white p-4 shadow rounded">Product B</li>
+      </ul>
+    </div>
+  
+    <!-- Toast -->
+    <div class="toast fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow hidden">
+      <span class="message">Product added to cart!</span>
+    </div>
+  
+
+    <!-- Dynamic Count Binding -->
+    <div class="mt-4">
+      Items in basket: <span data-recipe.get="count">0</span>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  </body>
+</html>
