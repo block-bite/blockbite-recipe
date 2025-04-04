@@ -194,7 +194,7 @@ export class Recipe {
     }
   }
 
-  click(selector) {
+  bindMouseEvent(selector) {
     const ctx = this;
 
     const wrapper = (handler) => {
@@ -206,19 +206,21 @@ export class Recipe {
         elements.forEach((el, index) => {
           if (!el) {
             console.warn(
-              `📚 Recipe Element not found for direct selector: ${selector}`
+              `📚 Recipe Element not found for selector: ${selector}`
             );
             return;
           }
+
           el.addEventListener("click", () => {
-            const R = ctx._getRuntime(el);
-            handler(index, R);
+            const target = ctx._getRuntime(el);
+            handler(target, index);
             if (wrapper._label) {
-              ctx._dispatch(wrapper._label, index, R);
+              ctx._dispatch(wrapper._label, target, index);
             }
           });
         });
       });
+
       return wrapper;
     };
 
@@ -228,6 +230,18 @@ export class Recipe {
     };
 
     return wrapper;
+  }
+
+  click(selector) {
+    return this.bindMouseEvent(selector);
+  }
+
+  mouseover(selector) {
+    return this.bindMouseEvent(selector);
+  }
+
+  mouseout(selector) {
+    return this.bindMouseEvent(selector);
   }
 
   bind(label, handler) {
@@ -242,9 +256,9 @@ export class Recipe {
     };
   }
 
-  _dispatch(label, payload, R) {
+  _dispatch(label, target, payload) {
     if (this.bindings[label]) {
-      this.bindings[label](payload, R);
+      this.bindings[label](target, payload);
     }
   }
 
@@ -299,21 +313,59 @@ export class Recipe {
   }
 }
 
-// Utility for working with multiple DOM elements
 function wrap(elements) {
   return {
     class: {
-      add: (cls) => elements.forEach((el) => el.classList.add(cls)),
-      remove: (cls) => elements.forEach((el) => el.classList.remove(cls)),
+      add(cls) {
+        elements.forEach((el) => el.classList.add(cls));
+        return this;
+      },
+      remove(cls) {
+        elements.forEach((el) => el.classList.remove(cls));
+        return this;
+      },
+      toggle(cls) {
+        elements.forEach((el) => el.classList.toggle(cls));
+        return this;
+      },
+    },
+    click(handler) {
+      elements.forEach((el) =>
+        el.addEventListener("click", (e) => handler(e, el))
+      );
+      return this;
+    },
+    mouseover(handler) {
+      elements.forEach((el) =>
+        el.addEventListener("mouseover", (e) => handler(e, el))
+      );
+      return this;
+    },
+    mouseout(handler) {
+      elements.forEach((el) =>
+        el.addEventListener("mouseout", (e) => handler(e, el))
+      );
+      return this;
     },
     eq(i) {
       const el = elements[i];
       return {
+        el,
         class: {
-          add: (cls) => el?.classList.add(cls),
-          remove: (cls) => el?.classList.remove(cls),
+          add: (cls) => {
+            el?.classList.add(cls);
+            return this;
+          },
+          remove: (cls) => {
+            el?.classList.remove(cls);
+            return this;
+          },
+          toggle: (cls) => {
+            el?.classList.toggle(cls);
+            return this;
+          },
         },
-        text: (key, value) => {
+        text(key, value) {
           const target =
             el?.querySelector(`[r-text="${key}"]`) ||
             el?.querySelector(`[data-r-text="${key}"]`);
@@ -321,10 +373,37 @@ function wrap(elements) {
         },
       };
     },
-    text: (key, value) => {
+    text(key, value) {
       elements.forEach((el) => {
-        el.textContent = value;
+        if (
+          el.getAttribute("r-text") === key ||
+          el.getAttribute("data-r-text") === key
+        ) {
+          el.textContent = value;
+          return;
+        }
+        const target =
+          el.querySelector(`[r-text="${key}"]`) ||
+          el.querySelector(`[data-r-text="${key}"]`);
+        if (target) target.textContent = value;
       });
     },
   };
 }
+
+// Global $r object
+window.$r = {
+  q(selector) {
+    return wrap(document.querySelectorAll(selector));
+  },
+  getItem() {
+    console.log("the document dont have data-r-item");
+    return null; // not relevant globally but for consistency
+  },
+  parent: {
+    data: {
+      set: () => {},
+      get: () => {},
+    },
+  },
+};

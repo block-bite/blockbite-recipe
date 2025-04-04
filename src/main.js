@@ -4,34 +4,32 @@ import { Recipe } from "./recipe.js";
 const tabsBind = new Recipe(".tabs-bind");
 
 tabsBind
-  .click(".tab")((index, R) => {
-    R.q(".tab").class.remove("ring-2");
-    R.class.add("ring-2");
+  .click(".tab")((el, index) => {
+    el.q(".tab").class.remove("ring-2");
+    el.class.add("ring-2");
   })
   .label("tab-click");
 
-tabsBind.bind("tab-click", (index, R) => {
-  R.q(".tab").class.remove("active");
-  R.q(".tab").eq(index).class.add("active");
-  R.q(".tab-contents > div").class.add("hidden");
-  R.q(".tab-contents > div").eq(index).class.remove("hidden");
-  R.parent.data.set("active", index);
+tabsBind.bind("tab-click", (el, index) => {
+  el.q(".tab").class.remove("active");
+  el.q(".tab").eq(index).class.add("active");
+  el.q(".tab-contents > div").class.add("hidden");
+  el.q(".tab-contents > div").eq(index).class.remove("hidden");
+  el.parent.data.set("active", index);
 });
 
 // Tabs with watch
 const tabsWatch = new Recipe(".tabs-watch");
 
-tabsWatch.click(".tab")((index, R) => {
-  R.q(".tab").class.remove("active");
-  R.class.add("active");
-  R.parent.data.set("active", index);
+tabsWatch.click(".tab")((el, index) => {
+  el.q(".tab").class.remove("active");
+  el.class.add("active");
+  el.parent.data.set("active", index);
 });
-console.log("tabsWatch root:", tabsWatch.root);
 
-tabsWatch.watch("active", (value, R) => {
-  console.log("tabsWatch watch:", value);
-  R.q(".tab-contents > div").class.add("hidden");
-  R.q(".tab-contents > div").eq(value).class.remove("hidden");
+tabsWatch.watch("active", (value, el) => {
+  el.q(".tab-contents > div").class.add("hidden");
+  el.q(".tab-contents > div").eq(value).class.remove("hidden");
 });
 
 // Store
@@ -57,22 +55,31 @@ const basket = new Recipe("store", [], { name: "basket", localStorage: true });
 const products = new Recipe(".products-grid");
 const loop = products.loop();
 
-loop.bind.click(".add-to-cart")((index, R) => {
-  const item = R.getItem();
+loop.bind.click(".add-to-cart")((index, el) => {
+  const item = el.getItem();
   const basket = Recipe.store.get("basket");
   basket.push(item);
 });
 
 loop.effect(store.store, ["id", "name", "age"]);
 
-const addProduct = new Recipe(".add-product");
+const addPerson = new Recipe(".add-person");
 
-addProduct.click()((index) => {
+addPerson.click()((el, index) => {
   const teamStore = Recipe.store.get("team");
   teamStore.push({
     id: (teamStore.length + 1).toString(),
-    name: "New Product",
+    name: "New Person",
     age: Math.floor(Math.random() * 100),
+  });
+  const toast = $r.q(".toast");
+  toast.class.add("show").remove("hidden");
+  setTimeout(() => {
+    toast.class.add("hidden").remove("show");
+  }, 3000);
+
+  toast.click(() => {
+    toast.class.remove("show").add("hidden");
   });
 });
 
@@ -85,7 +92,9 @@ removeProduct.click()((index) => {
   }
 });
 
-basket.watch("length", (value, R) => {
-  console.log("basket length", R);
-  R.q(".product-basket").text("count", value);
+// initial
+$r.q(".product-basket").text("count", basket.store.length);
+
+basket.watch("length", (value, el) => {
+  $r.q(".product-basket").text("count", value);
 });
