@@ -199,27 +199,6 @@ basket.watch("length", (R, value) => {
 }
 ```
 
-that will auto generate
-
-```
-const tabsBind = new Recipe(".tabs-bind");
-
-tabsBind
-  .click(".tab")((R, index) => {
-    R.q(".tab").class.remove("ring-2");
-    R.class.add("ring-2");
-  })
-  .label("tab-click");
-
-tabsBind.bind("tab-click", (R, index) => {
-  R.q(".tab").class.remove("active");
-  R.q(".tab").eq(index).class.add("active");
-  R.q(".tab-contents > div").class.add("hidden");
-  R.q(".tab-contents > div").eq(index).class.remove("hidden");
-  R.parent.data.set("active", index);
-});
-```
-
 - r-if, r-class, r-attr, r-bind directive support
 - .sync() for two-way data binding
 - Plugin system: Recipe.use(plugin)
