@@ -2,7 +2,7 @@
 
 **Recipe.js** is a lightweight, expressive, and reactive JavaScript DSL designed to simplify interactive UIs without a heavy framework.
 
-> Think: jQuery meets Alpine.js meets Vue reactivity — all in ~1KB of custom DSL.
+> Think: jQuery meets Alpine.js meets Vue reactivity — all in < ~5KB of custom DSL.
 
 ---
 
