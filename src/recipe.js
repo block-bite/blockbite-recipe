@@ -407,3 +407,102 @@ window.$r = {
     },
   },
 };
+
+Recipe.fromJSON = function (config) {
+  config.recipes.forEach((item) => {
+    if (item.type === "store") {
+      new Recipe("store", item.data, {
+        name: item.name,
+        localStorage: item.localStorage || false,
+      });
+      return;
+    }
+
+    if (item.type === "component") {
+      const R = new Recipe(item.target);
+
+      (item.events || []).forEach((event) => {
+        const handler = (el, index) => {
+          event.actions?.forEach((action) => applyAction(el, action, index));
+        };
+
+        let ev = R[event.event](event.selector)(handler);
+        if (event.label) ev.label(event.label);
+      });
+
+      Object.entries(item.bind || {}).forEach(([label, actions]) => {
+        R.bind(label, (el, index) => {
+          actions.forEach((action) => applyAction(el, action, index));
+        });
+      });
+
+      Object.entries(item.watch || {}).forEach(([key, actions]) => {
+        R.watch(key, (el, value) => {
+          actions.forEach((action) => applyAction(el, action, value));
+        });
+      });
+
+      if (item.loop) {
+        const loop = R.loop();
+
+        Object.entries(item.loop.bind || {}).forEach(([evt, handlers]) => {
+          Object.entries(handlers).forEach(([selector, actions]) => {
+            loop.bind[evt](selector)((el, index) => {
+              actions.forEach((action) => applyAction(el, action, index));
+            });
+          });
+        });
+
+        if (item.loop.effect) {
+          const { storeName, keys } = item.loop.effect;
+          const store = Recipe.store.get(storeName);
+          loop.effect(store, keys);
+        }
+      }
+    }
+
+    if (item.type === "global") {
+      item.watch?.forEach((watchItem) => {
+        const storeInstance = Recipe._storeInstanceMap.get(watchItem.store);
+        if (!storeInstance)
+          return console.warn("Missing store for", watchItem.store);
+
+        storeInstance.watch(watchItem.key, (el, value) => {
+          applyAction({ q: $r.q }, watchItem.action, value);
+        });
+      });
+    }
+  });
+};
+
+// Helper for executing JSON actions
+function applyAction(R, action, ctxVar) {
+  const [key, value] = Object.entries(action)[0];
+
+  if (key.startsWith("q")) {
+    const query = R.q(value);
+    return;
+  }
+
+  if (key === "q") {
+    const q = R.q(value);
+    return q;
+  }
+
+  if (key.startsWith("class.")) {
+    const method = key.split(".")[1];
+    R.class[method](value);
+    return;
+  }
+
+  if (key.startsWith("parent.data.set")) {
+    const [k, v] = value;
+    R.parent.data.set(k, v === "index" || v === "value" ? ctxVar : v);
+    return;
+  }
+
+  if (key === "text") {
+    R.q(value.selector).text(value.key, ctxVar);
+    return;
+  }
+}

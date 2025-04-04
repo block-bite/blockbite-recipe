@@ -1,8 +1,8 @@
-# 🍳 Recipe.js — A Reactive DSL for UI Interactions
+# 🍳 Recipe.js — A Reactive DOM first helper
 
 **Recipe.js** is a lightweight, expressive, and reactive JavaScript DSL designed to simplify interactive UIs without a heavy framework.
 
-> Think: jQuery meets Alpine.js meets Vue reactivity — all in < ~ 10KB of custom DSL.
+> Think: jQuery meets Alpine.js meets React reactivity — all in < ~ 10KB of custom DSL.
 
 ---
 
@@ -109,7 +109,7 @@ $r.q(".toast").click(() => {
 ## Toast example
 
 ```
-addPerson.click()((R) => {
+addPerson.click()(() => {
   Recipe.store.get("team").push({
     id: Date.now().toString(),
     name: "New Person",
@@ -159,7 +159,66 @@ basket.watch("length", (R, value) => {
 <div class="toast hidden">✅ Product added!</div>
 ```
 
-## 🛠 Roadmap
+## 🛠 Roadmap - create JSON based api
+
+```
+{
+  "recipes": [
+    {
+      "target": ".tabs-bind",
+      "events": [
+        {
+          "type": "click",
+          "selector": ".tab",
+          "label": "tab-click",
+          "actions": [
+            { "q": ".tab", "class.remove": "ring-2" },
+            { "class.add": "ring-2" }
+          ]
+        }
+      ],
+      "bind": {
+        "tab-click": [
+          { "q": ".tab", "class.remove": "active" },
+          { "q": ".tab", "eq": 0, "class.add": "active" },
+          { "q": ".tab-contents > div", "class.add": "hidden" },
+          { "q": ".tab-contents > div", "eq": 0, "class.remove": "hidden" },
+          { "parent.data.set": ["active", 0] }
+        ]
+      }
+    },
+    {
+      "type": "store",
+      "name": "team",
+      "data": [
+        { "id": "1", "name": "John Doe", "age": 30 },
+        { "id": "2", "name": "Jane Smith", "age": 25 }
+      ]
+    }
+  ]
+}
+```
+
+that will auto generate
+
+```
+const tabsBind = new Recipe(".tabs-bind");
+
+tabsBind
+  .click(".tab")((R, index) => {
+    R.q(".tab").class.remove("ring-2");
+    R.class.add("ring-2");
+  })
+  .label("tab-click");
+
+tabsBind.bind("tab-click", (R, index) => {
+  R.q(".tab").class.remove("active");
+  R.q(".tab").eq(index).class.add("active");
+  R.q(".tab-contents > div").class.add("hidden");
+  R.q(".tab-contents > div").eq(index).class.remove("hidden");
+  R.parent.data.set("active", index);
+});
+```
 
 - r-if, r-class, r-attr, r-bind directive support
 - .sync() for two-way data binding

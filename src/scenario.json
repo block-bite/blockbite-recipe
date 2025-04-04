@@ -1,0 +1,130 @@
+{
+    "recipes": [
+      {
+        "type": "store",
+        "name": "team",
+        "data": [
+          { "id": "1", "name": "John Doe", "age": 30 },
+          { "id": "2", "name": "Jane Smith", "age": 25 },
+          { "id": "3", "name": "Alice Johnson", "age": 28 },
+          { "id": "4", "name": "Bob Brown", "age": 35 },
+          { "id": "5", "name": "Charlie Davis", "age": 22 },
+          { "id": "6", "name": "Diana Prince", "age": 27 },
+          { "id": "7", "name": "Ethan Hunt", "age": 32 },
+          { "id": "8", "name": "Fiona Green", "age": 29 },
+          { "id": "9", "name": "George White", "age": 31 },
+          { "id": "10", "name": "Hannah Black", "age": 26 }
+        ]
+      },
+      {
+        "type": "store",
+        "name": "basket",
+        "data": [],
+        "localStorage": true
+      },
+      {
+        "type": "component",
+        "target": ".tabs-bind",
+        "events": [
+          {
+            "event": "click",
+            "selector": ".tab",
+            "label": "tab-click",
+            "actions": [
+              { "q": ".tab", "class.remove": "ring-2" },
+              { "class.add": "ring-2" }
+            ]
+          }
+        ],
+        "bind": {
+          "tab-click": [
+            { "q": ".tab", "class.remove": "active" },
+            { "q": ".tab", "eq": "index", "class.add": "active" },
+            { "q": ".tab-contents > div", "class.add": "hidden" },
+            { "q": ".tab-contents > div", "eq": "index", "class.remove": "hidden" },
+            { "parent.data.set": ["active", "index"] }
+          ]
+        }
+      },
+      {
+        "type": "component",
+        "target": ".tabs-watch",
+        "events": [
+          {
+            "event": "click",
+            "selector": ".tab",
+            "actions": [
+              { "q": ".tab", "class.remove": "active" },
+              { "class.add": "active" },
+              { "parent.data.set": ["active", "index"] }
+            ]
+          }
+        ],
+        "watch": {
+          "active": [
+            { "q": ".tab-contents > div", "class.add": "hidden" },
+            { "q": ".tab-contents > div", "eq": "value", "class.remove": "hidden" }
+          ]
+        }
+      },
+      {
+        "type": "component",
+        "target": ".products-grid",
+        "loop": {
+          "bind": {
+            "click": {
+              ".add-to-cart": [
+                { "getItem.push": "basket" }
+              ]
+            }
+          },
+          "effect": {
+            "storeName": "team",
+            "keys": ["id", "name", "age"]
+          }
+        }
+      },
+      {
+        "type": "component",
+        "target": ".add-person",
+        "events": [
+          {
+            "event": "click",
+            "actions": [
+              { "custom": "addPersonToTeam" },
+              { "q": ".toast", "class.add": "show" },
+              { "q": ".toast", "class.remove": "hidden" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "component",
+        "target": ".remove-product",
+        "events": [
+          {
+            "event": "click",
+            "actions": [
+              { "custom": "removeLastFromTeam" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "global",
+        "watch": [
+          {
+            "store": "basket",
+            "key": "length",
+            "action": {
+              "text": {
+                "selector": ".product-basket",
+                "key": "count"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+  

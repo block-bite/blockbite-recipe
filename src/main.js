@@ -18,7 +18,7 @@ tabsBind.bind("tab-click", (el, index) => {
   el.parent.data.set("active", index);
 });
 
-// isnt working yet
+// Tabs with watch
 const tabsWatch = new Recipe(".tabs-watch");
 
 tabsWatch.click(".tab")((el, index) => {
@@ -79,7 +79,7 @@ addPerson.click()((el, index) => {
   }, 3000);
 
   toast.click(() => {
-    toast.class.remove("show").add("hidden");
+    toast.class.remove("show").add;
   });
 });
 
@@ -98,3 +98,8 @@ $r.q(".product-basket").text("count", basket.store.length);
 basket.watch("length", (value, el) => {
   $r.q(".product-basket").text("count", value);
 });
+
+/*
+import recipeJson from "./scenario.json";
+Recipe.fromJSON(recipeJson);
+*/
