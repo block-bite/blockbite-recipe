@@ -38,19 +38,18 @@
    </div>
 
   
-      <div class="mt-6 flex space-x-4">
+    <div class="mt-6 flex space-x-4">
         <button class="add-person bg-blue-600 text-white px-4 py-2 hover:bg-blue-200 rounded">Add Person</button>
         <button class="remove-product bg-red-600 text-white px-4 py-2 hover:bg-red-200 rounded">Remove Person</button>
-        <button class="bookmark text-gray-600 hover:opacity-75 px-4 py-2 border rounded">Bookmark</button>
       </div>
     </div>
     <!-- Dynamic Count Binding -->
-    <div class="mt-4 ">
+    <div class="mt-4 border-p-4 bg-white rounded shadow p-4 max-w-2xl my-4 fixed top-4 right-4 bg-blue-600 text-white">
       Items in basket: <span class="product-basket" r-text="count">0</span>
     </div>
 
 
-    <div class="products-grid grid-cols-3 container mx-auto gap-4 grid">
+    <div class="products-grid grid-cols-3 container mx-auto gap-4 grid my-8">
       <div r-loop>
         <div class="product bg-white p-4 rounded shadow">
           <span r-text="name"></span>

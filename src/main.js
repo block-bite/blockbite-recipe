@@ -18,7 +18,7 @@ tabsBind.bind("tab-click", (el, index) => {
   el.parent.data.set("active", index);
 });
 
-// Tabs with watch
+// isnt working yet
 const tabsWatch = new Recipe(".tabs-watch");
 
 tabsWatch.click(".tab")((el, index) => {
