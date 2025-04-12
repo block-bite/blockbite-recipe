@@ -8,7 +8,7 @@
 
 ## ✨ Features
 
-- ✅ Declarative event binding: `.click()`, `.bind()`, `.watch()`
+- ✅ Declarative event binding: `.click()`, `.watch()`
 - ✅ Scoped runtime with `R.q(...)`, `.class.add()`, `.getItem()`
 - ✅ Reactive store with `Proxy`, localStorage sync, `.watch()`
 - ✅ DOM rendering via `.loop().effect()`
@@ -18,14 +18,14 @@
 
 ## 💡 Runtime Helpers
 
-| Function                | Description                                         |
-| ----------------------- | --------------------------------------------------- |
-| `el.q(selector)`        | Scoped query selector inside the component          |
-| `el.class.add/remove()` | Class manipulation with chaining support            |
-| `el.getItem()`          | Reads data from `data-r-item` on self or parent     |
-| `el.parent.data.set()`  | Set reactive values that trigger `.watch()`         |
-| `$r.q(selector)`        | Global document-level query selector                |
-| `.text(key, value)`     | Updates `[r-text="key"]` content inside the element |
+| Function                 | Description                                         |
+| ------------------------ | --------------------------------------------------- |
+| `el.q(selector)`         | Scoped query selector inside the component          |
+| `el.class.add/remove()`  | Class manipulation with chaining support            |
+| `el.getItem()`           | Reads data from `data-r-item` on self or parent     |
+| `el.parent().data.set()` | Set reactive values that trigger `.watch()`         |
+| `$r.q(selector)`         | Global document-level query selector                |
+| `.text(key, value)`      | Updates `[r-text="key"]` content inside the element |
 
 ---
 
@@ -60,7 +60,7 @@ init
 const products = new Recipe(".products-grid");
 const loop = products.loop();
 
-loop.bind.click(".add-to-cart")((R, index) => {
+loop.click(".add-to-cart")((R, index) => {
   const item = R.getItem();
   Recipe.store.get("basket").push(item);
 });
@@ -79,21 +79,53 @@ render
 </div>
 ```
 
-## Component events (does not work)
+## Tabs with bindings
 
 ```
-const tabs = new Recipe(".tabs");
+// Tabs with bind
+const tabsBind = new Recipe(".tabs-bind");
 
-tabs.click(".tab")((R, index) => {
-  R.q(".tab").class.remove("active");
-  R.class.add("active");
-  R.parent.data.set("active", index);
+tabsBind.click(".tab")((el, index) => {
+  el.q(".tab").class.remove("ring-2");
+  el.class.add("ring-2");
+  el.q(".tab").class.remove("ring-2");
+  el.q(".tab").eq(index).class.add("ring-2");
+  el.q(".tab-contents > div").class.add("hidden");
+  el.q(".tab-contents > div").eq(index).class.remove("hidden");
+  el.parent().data.set("active", index);
+});
+```
+
+## Tabs with a watcher
+
+```
+// Tabs with watch
+const tabsWatch = new Recipe(".tabs-watch");
+
+tabsWatch.click(".tab")((el, index) => {
+  el.q(".tab").class.remove("ring-2");
+  el.class.add("ring-2");
+  el.parent().data.set("active", index);
+  el.parent().data.watch("active")((value) => {
+    el.q(".tab-contents > div").class.add("hidden");
+    el.q(".tab-contents > div").eq(value).class.remove("hidden");
+  });
+});
+```
+
+## Tracking data events
+
+```
+r.q(".test").data.set("test", "test");
+console.log($r.q(".test").data.get("test"));
+
+$r.q(".test").data.watch("test")((value) => {
+  console.log(value, "changed");
 });
 
-tabs.watch("active", (R, value) => {
-  R.q(".tab-contents > div").class.add("hidden");
-  R.q(".tab-contents > div").eq(value).class.remove("hidden");
-});
+setTimeout(() => {
+  $r.q(".test").data.set("test", "poo");
+}, 2000);
 ```
 
 ## Global runtime
