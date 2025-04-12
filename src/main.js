@@ -3,33 +3,27 @@ import { Recipe } from "./recipe.js";
 // Tabs with bind
 const tabsBind = new Recipe(".tabs-bind");
 
-tabsBind
-  .click(".tab")((el, index) => {
-    el.q(".tab").class.remove("ring-2");
-    el.class.add("ring-2");
-  })
-  .label("tab-click");
-
-tabsBind.bind("tab-click", (el, index) => {
-  el.q(".tab").class.remove("active");
-  el.q(".tab").eq(index).class.add("active");
+tabsBind.click(".tab")((el, index) => {
+  el.q(".tab").class.remove("ring-2");
+  el.class.add("ring-2");
+  el.q(".tab").class.remove("ring-2");
+  el.q(".tab").eq(index).class.add("ring-2");
   el.q(".tab-contents > div").class.add("hidden");
   el.q(".tab-contents > div").eq(index).class.remove("hidden");
-  el.parent.data.set("active", index);
+  el.parent().data.set("active", index);
 });
 
 // Tabs with watch
 const tabsWatch = new Recipe(".tabs-watch");
 
 tabsWatch.click(".tab")((el, index) => {
-  el.q(".tab").class.remove("active");
-  el.class.add("active");
-  el.parent.data.set("active", index);
-});
-
-tabsWatch.watch("active", (value, el) => {
-  el.q(".tab-contents > div").class.add("hidden");
-  el.q(".tab-contents > div").eq(value).class.remove("hidden");
+  el.q(".tab").class.remove("ring-2");
+  el.class.add("ring-2");
+  el.parent().data.set("active", index);
+  el.parent().data.watch("active")((value) => {
+    el.q(".tab-contents > div").class.add("hidden");
+    el.q(".tab-contents > div").eq(value).class.remove("hidden");
+  });
 });
 
 // Store
@@ -55,7 +49,7 @@ const basket = new Recipe("store", [], { name: "basket", localStorage: true });
 const products = new Recipe(".products-grid");
 const loop = products.loop();
 
-loop.bind.click(".add-to-cart")((index, el) => {
+loop.click(".add-to-cart")((index, el) => {
   const item = el.getItem();
   const basket = Recipe.store.get("basket");
   basket.push(item);
@@ -103,3 +97,14 @@ basket.watch("length", (value, el) => {
 import recipeJson from "./scenario.json";
 Recipe.fromJSON(recipeJson);
 */
+
+$r.q(".test").data.set("test", "test");
+console.log($r.q(".test").data.get("test"));
+
+$r.q(".test").data.watch("test")((value) => {
+  console.log(value, "changed");
+});
+
+setTimeout(() => {
+  $r.q(".test").data.set("test", "poo");
+}, 2000);

@@ -1,16 +1,14 @@
+// REFACTORED Recipe.js — bind, label, and loop.bind removed
+
 export class Recipe {
   static store = new Map();
 
   constructor(selectorOrStore, dataOrSetup, options = {}) {
-    // Handle store setup
     if (selectorOrStore === "store") {
       this._isStore = true;
       this._storeName = options.name || "store";
       this._useLocalStorage = options.localStorage || false;
-
       this.store = this._initStore(dataOrSetup);
-
-      // Optional API sugar for external watching
 
       this.watch = (key, fn) => {
         this._storeWatchers ??= {};
@@ -24,12 +22,11 @@ export class Recipe {
       return;
     }
 
-    // Handle normal DOM component
     this.root = document.querySelector(selectorOrStore);
     this.queue = [];
-    this.bindings = {};
     this.watchers = {};
     this._state = {};
+    this._stateWatchers = {};
 
     this.store = new Proxy(
       {},
@@ -39,11 +36,8 @@ export class Recipe {
 
           if (!isNaN(prop) || prop === "length") {
             this._saveStore(obj);
-
-            // Trigger loop reactivity
             subscribers.forEach((fn) => fn(obj));
 
-            // 🔥 Trigger external watchers
             const instance = Recipe._storeInstanceMap?.get(this._storeName);
             const externalWatchers = instance?._storeWatchers?.[prop];
             if (externalWatchers) {
@@ -59,7 +53,6 @@ export class Recipe {
       }
     );
 
-    // Defer queue execution
     setTimeout(() => this._runQueue(), 0);
   }
 
@@ -75,14 +68,12 @@ export class Recipe {
 
   loop() {
     const template = this.root.querySelector("[r-loop]");
-    if (!template) return { effect: () => {}, bind: {} };
+    if (!template) return { effect: () => {}, click: () => {} };
 
     const parent = template.parentElement;
     const templateHTML = template.cloneNode(true);
 
-    const bindings = {
-      click: [],
-    };
+    const clickBindings = [];
 
     const loopApi = {
       effect: (store, keys = []) => {
@@ -102,10 +93,8 @@ export class Recipe {
               if (target) target.textContent = item[key];
             });
 
-            // Apply click bindings
-            bindings.click.forEach(({ selector, handler }) => {
+            clickBindings.forEach(({ selector, handler }) => {
               const targets = clone.querySelectorAll(selector);
-
               targets.forEach((target) => {
                 target.addEventListener("click", () => {
                   const R = this._getRuntime(target);
@@ -125,12 +114,9 @@ export class Recipe {
         return loopApi;
       },
 
-      bind: {
-        click: (selector) => (handler) => {
-          console.log("✅ registered bind.click for", selector);
-          bindings.click.push({ selector, handler });
-          return loopApi;
-        },
+      click: (selector) => (handler) => {
+        clickBindings.push({ selector, handler });
+        return loopApi;
       },
     };
 
@@ -147,7 +133,7 @@ export class Recipe {
           stored = JSON.parse(raw);
         } catch (e) {
           console.warn(
-            "📚 Recipe Failed to parse localStorage data for store:",
+            "📚 Recipe Failed to parse localStorage for store:",
             this._storeName
           );
         }
@@ -165,7 +151,6 @@ export class Recipe {
           this._saveStore(obj);
           subscribers.forEach((fn) => fn(obj));
 
-          //  Trigger external watchers
           const watchers = this._storeWatchers?.[prop];
           if (watchers) {
             watchers.forEach((fn) => {
@@ -197,39 +182,27 @@ export class Recipe {
   bindMouseEvent(selector) {
     const ctx = this;
 
-    const wrapper = (handler) => {
+    return (handler) => {
       ctx.queue.push(() => {
         const elements = selector
           ? ctx.root.querySelectorAll(selector)
-          : [ctx.root]; // ← default to root if no selector
+          : [ctx.root];
 
         elements.forEach((el, index) => {
           if (!el) {
-            console.warn(
-              `📚 Recipe Element not found for selector: ${selector}`
-            );
+            console.warn(`📚 Recipe Element not found: ${selector}`);
             return;
           }
 
           el.addEventListener("click", () => {
             const target = ctx._getRuntime(el);
             handler(target, index);
-            if (wrapper._label) {
-              ctx._dispatch(wrapper._label, target, index);
-            }
           });
         });
       });
 
-      return wrapper;
+      return ctx;
     };
-
-    wrapper.label = function (labelName) {
-      wrapper._label = labelName;
-      return wrapper;
-    };
-
-    return wrapper;
   }
 
   click(selector) {
@@ -244,22 +217,8 @@ export class Recipe {
     return this.bindMouseEvent(selector);
   }
 
-  bind(label, handler) {
-    this.bindings[label] = (payload, R) => {
-      handler(payload, R);
-    };
-  }
-
   watch(key, handler) {
-    this.watchers[key] = (value, R) => {
-      handler(value, R);
-    };
-  }
-
-  _dispatch(label, target, payload) {
-    if (this.bindings[label]) {
-      this.bindings[label](target, payload);
-    }
+    this.watchers[key] = (value, R) => handler(value, R);
   }
 
   _runQueue() {
@@ -276,36 +235,52 @@ export class Recipe {
         remove: (cls) => el.classList.remove(cls),
       },
       q(selector) {
-        const base = ctx.root || document; // fallback!
-        return wrap(base.querySelectorAll(selector));
+        const base = ctx.root || document;
+        return wrap(base.querySelectorAll(selector), ctx);
       },
-
-      parent: {
-        data: {
-          set: (key, value) => {
-            ctx.store[key] = value;
-            ctx.root.setAttribute(`data-${key}`, value); // ✨ update DOM attribute
-          },
-          get: (key) => ctx.store[key],
+      data: {
+        set: (key, value) => {
+          ctx._state[key] = value;
+          el?.setAttribute(`data-${key}`, value);
+          if (ctx._stateWatchers?.[key]) {
+            ctx._stateWatchers[key].forEach((fn) => fn(value));
+          }
+        },
+        get: (key) => ctx._state[key],
+        watch: (key) => (fn) => {
+          ctx._stateWatchers ??= {};
+          ctx._stateWatchers[key] ??= [];
+          ctx._stateWatchers[key].push(fn);
         },
       },
+      parent(selector) {
+        const parentEl = selector ? el.closest(selector) : el.parentElement;
+        return {
+          data: {
+            set: (key, value) => {
+              ctx._state[key] = value;
+              parentEl?.setAttribute(`data-${key}`, value);
+              if (ctx._stateWatchers?.[key]) {
+                ctx._stateWatchers[key].forEach((fn) => fn(value));
+              }
+            },
+            get: (key) => ctx._state[key],
+            watch: (key) => (fn) => {
+              ctx._stateWatchers ??= {};
+              ctx._stateWatchers[key] ??= [];
+              ctx._stateWatchers[key].push(fn);
+            },
+          },
+        };
+      },
       getItem() {
-        // get data-r-item attribute
-        const item = el.getAttribute("data-r-item");
-        if (!item) {
-          // traverse up the DOM to find the closest parent with data-r-item
-          const parent = el.closest("[data-r-item]");
-          if (parent) {
-            return JSON.parse(parent.getAttribute("data-r-item"));
-          }
-        }
+        const item =
+          el.getAttribute("data-r-item") ||
+          el.closest("[data-r-item]")?.getAttribute("data-r-item");
         try {
-          return JSON.parse(item);
-        } catch (e) {
-          console.warn(
-            "📚 Recipe Failed to parse data-r-item attribute:",
-            item
-          );
+          return item ? JSON.parse(item) : null;
+        } catch {
+          console.warn("📚 Recipe Failed to parse data-r-item:", item);
           return null;
         }
       },
@@ -313,7 +288,10 @@ export class Recipe {
   }
 }
 
-function wrap(elements) {
+const globalWatchers = {};
+
+function wrap(elements, ctx) {
+  const stateWatchers = ctx?._stateWatchers ?? globalWatchers;
   return {
     class: {
       add(cls) {
@@ -327,6 +305,26 @@ function wrap(elements) {
       toggle(cls) {
         elements.forEach((el) => el.classList.toggle(cls));
         return this;
+      },
+    },
+    data: {
+      set(key, value) {
+        elements.forEach((el) => {
+          el.setAttribute(`data-${key}`, value);
+          if (stateWatchers?.[key]) {
+            stateWatchers[key].forEach((fn) => fn(value));
+          }
+        });
+        return this;
+      },
+      get(key) {
+        return elements[0]?.getAttribute(`data-${key}`);
+      },
+      watch(key) {
+        return (fn) => {
+          stateWatchers[key] ??= [];
+          stateWatchers[key].push(fn);
+        };
       },
     },
     click(handler) {
@@ -371,6 +369,20 @@ function wrap(elements) {
             el?.querySelector(`[data-r-text="${key}"]`);
           if (target) target.textContent = value;
         },
+        data: {
+          set: (key, value) => {
+            el?.setAttribute(`data-${key}`, value);
+            if (stateWatchers?.[key]) {
+              stateWatchers[key].forEach((fn) => fn(value));
+            }
+            return this;
+          },
+          get: (key) => el?.getAttribute(`data-${key}`),
+          watch: (key) => (fn) => {
+            stateWatchers[key] ??= [];
+            stateWatchers[key].push(fn);
+          },
+        },
       };
     },
     text(key, value) {
@@ -397,112 +409,6 @@ window.$r = {
     return wrap(document.querySelectorAll(selector));
   },
   getItem() {
-    console.log("the document dont have data-r-item");
-    return null; // not relevant globally but for consistency
-  },
-  parent: {
-    data: {
-      set: () => {},
-      get: () => {},
-    },
+    return null;
   },
 };
-
-Recipe.fromJSON = function (config) {
-  config.recipes.forEach((item) => {
-    if (item.type === "store") {
-      new Recipe("store", item.data, {
-        name: item.name,
-        localStorage: item.localStorage || false,
-      });
-      return;
-    }
-
-    if (item.type === "component") {
-      const R = new Recipe(item.target);
-
-      (item.events || []).forEach((event) => {
-        const handler = (el, index) => {
-          event.actions?.forEach((action) => applyAction(el, action, index));
-        };
-
-        let ev = R[event.event](event.selector)(handler);
-        if (event.label) ev.label(event.label);
-      });
-
-      Object.entries(item.bind || {}).forEach(([label, actions]) => {
-        R.bind(label, (el, index) => {
-          actions.forEach((action) => applyAction(el, action, index));
-        });
-      });
-
-      Object.entries(item.watch || {}).forEach(([key, actions]) => {
-        R.watch(key, (el, value) => {
-          actions.forEach((action) => applyAction(el, action, value));
-        });
-      });
-
-      if (item.loop) {
-        const loop = R.loop();
-
-        Object.entries(item.loop.bind || {}).forEach(([evt, handlers]) => {
-          Object.entries(handlers).forEach(([selector, actions]) => {
-            loop.bind[evt](selector)((el, index) => {
-              actions.forEach((action) => applyAction(el, action, index));
-            });
-          });
-        });
-
-        if (item.loop.effect) {
-          const { storeName, keys } = item.loop.effect;
-          const store = Recipe.store.get(storeName);
-          loop.effect(store, keys);
-        }
-      }
-    }
-
-    if (item.type === "global") {
-      item.watch?.forEach((watchItem) => {
-        const storeInstance = Recipe._storeInstanceMap.get(watchItem.store);
-        if (!storeInstance)
-          return console.warn("Missing store for", watchItem.store);
-
-        storeInstance.watch(watchItem.key, (el, value) => {
-          applyAction({ q: $r.q }, watchItem.action, value);
-        });
-      });
-    }
-  });
-};
-
-// Helper for executing JSON actions
-function applyAction(R, action, ctxVar) {
-  const [key, value] = Object.entries(action)[0];
-
-  if (key.startsWith("q")) {
-    const query = R.q(value);
-    return;
-  }
-
-  if (key === "q") {
-    const q = R.q(value);
-    return q;
-  }
-
-  if (key.startsWith("class.")) {
-    const method = key.split(".")[1];
-    R.class[method](value);
-    return;
-  }
-
-  if (key.startsWith("parent.data.set")) {
-    const [k, v] = value;
-    R.parent.data.set(k, v === "index" || v === "value" ? ctxVar : v);
-    return;
-  }
-
-  if (key === "text") {
-    R.q(value.selector).text(value.key, ctxVar);
-    return;
-  }
-}
