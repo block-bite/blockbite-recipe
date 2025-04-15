@@ -403,8 +403,8 @@ function wrap(elements, ctx) {
   };
 }
 
-// Global $r object
-window.$r = {
+// Global $r helper
+const $r = {
   q(selector) {
     return wrap(document.querySelectorAll(selector));
   },
@@ -412,3 +412,9 @@ window.$r = {
     return null;
   },
 };
+
+// Attach globals (for UMD builds)
+if (typeof window !== "undefined") {
+  window.Recipe = Recipe;
+  window.$r = $r;
+}
