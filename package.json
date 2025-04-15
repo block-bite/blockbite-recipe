@@ -1,15 +1,16 @@
 {
   "name": "@blockbite/recipe",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "main": "dist/recipe.umd.cjs",    
   "module": "dist/recipe.js",
+  "types": "./types/recipe.d.ts",
   "exports": {
     "import": "./dist/recipe.js",
     "require": "./dist/recipe.umd.cjs"
   },
   "files": [
-    "dist"
+    "dist", "types"
   ],
   "publishConfig": {
     "access": "public"
