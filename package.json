@@ -1,6 +1,6 @@
 {
   "name": "@blockbite/recipe",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist/recipe.umd.cjs",    
   "module": "dist/recipe.js",
