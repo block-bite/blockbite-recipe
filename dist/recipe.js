@@ -1,6 +1,6 @@
-var w = Object.defineProperty;
-var A = (n, o, s) => o in n ? w(n, o, { enumerable: !0, configurable: !0, writable: !0, value: s }) : n[o] = s;
-var E = (n, o, s) => A(n, typeof o != "symbol" ? o + "" : o, s);
+var q = Object.defineProperty;
+var p = (n, o, s) => o in n ? q(n, o, { enumerable: !0, configurable: !0, writable: !0, value: s }) : n[o] = s;
+var S = (n, o, s) => p(n, typeof o != "symbol" ? o + "" : o, s);
 const g = class g {
   constructor(o, s, r = {}) {
     if (o === "store") {
@@ -47,10 +47,10 @@ const g = class g {
               const m = u.querySelector(`[r-text="${_}"]`);
               m && (m.textContent = d[_]);
             }), t.forEach(({ selector: _, handler: m }) => {
-              u.querySelectorAll(_).forEach((l) => {
-                l.addEventListener("click", () => {
-                  const q = this._getRuntime(l);
-                  m(f, q);
+              u.querySelectorAll(_).forEach((E) => {
+                E.addEventListener("click", () => {
+                  const w = this._getRuntime(E);
+                  m(f, w);
                 });
               });
             }), s.appendChild(u);
@@ -177,11 +177,11 @@ const g = class g {
     };
   }
 };
-E(g, "store", /* @__PURE__ */ new Map());
-let S = g;
-const p = {};
+S(g, "store", /* @__PURE__ */ new Map());
+let l = g;
+const A = {};
 function b(n, o) {
-  const s = (o == null ? void 0 : o._stateWatchers) ?? p;
+  const s = (o == null ? void 0 : o._stateWatchers) ?? A;
   return {
     class: {
       add(r) {
@@ -259,7 +259,7 @@ function b(n, o) {
     }
   };
 }
-window.$r = {
+const L = {
   q(n) {
     return b(document.querySelectorAll(n));
   },
@@ -267,6 +267,7 @@ window.$r = {
     return null;
   }
 };
+typeof window < "u" && (window.Recipe = l, window.$r = L);
 export {
-  S as Recipe
+  l as Recipe
 };
