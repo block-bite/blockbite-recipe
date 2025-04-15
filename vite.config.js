@@ -5,7 +5,7 @@ export default defineConfig({
     lib: {
       entry: "./src/recipe.js",
       name: "Recipe",
-      fileName: "recipe",
+      fileName: (format) => (format === "umd" ? "recipe.umd.js" : "recipe.js"),
       formats: ["es", "umd"],
     },
     rollupOptions: {

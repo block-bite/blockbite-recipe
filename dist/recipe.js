@@ -1,206 +1,272 @@
-var E = Object.defineProperty;
-var x = (h, e, t) => e in h ? E(h, e, { enumerable: !0, configurable: !0, writable: !0, value: t }) : h[e] = t;
-var b = (h, e, t) => x(h, typeof e != "symbol" ? e + "" : e, t);
-const f = class f {
-  constructor(e, t, r = {}) {
-    if (e === "store") {
-      this._isStore = !0, this._storeName = r.name || "store", this._useLocalStorage = r.localStorage || !1, this.store = this._initStore(t), this.watch = (s, a) => {
-        var o;
-        this._storeWatchers ?? (this._storeWatchers = {}), (o = this._storeWatchers)[s] ?? (o[s] = []), this._storeWatchers[s].push(a);
-      }, f.store.set(this._storeName, this.store), f._storeInstanceMap ?? (f._storeInstanceMap = /* @__PURE__ */ new Map()), f._storeInstanceMap.set(this._storeName, this);
+var w = Object.defineProperty;
+var A = (n, o, s) => o in n ? w(n, o, { enumerable: !0, configurable: !0, writable: !0, value: s }) : n[o] = s;
+var E = (n, o, s) => A(n, typeof o != "symbol" ? o + "" : o, s);
+const g = class g {
+  constructor(o, s, r = {}) {
+    if (o === "store") {
+      this._isStore = !0, this._storeName = r.name || "store", this._useLocalStorage = r.localStorage || !1, this.store = this._initStore(s), this.watch = (t, e) => {
+        var a;
+        this._storeWatchers ?? (this._storeWatchers = {}), (a = this._storeWatchers)[t] ?? (a[t] = []), this._storeWatchers[t].push(e);
+      }, g.store.set(this._storeName, this.store), g._storeInstanceMap ?? (g._storeInstanceMap = /* @__PURE__ */ new Map()), g._storeInstanceMap.set(this._storeName, this);
       return;
     }
-    this.root = document.querySelector(e), this.queue = [], this.bindings = {}, this.watchers = {}, this._state = {}, this.store = new Proxy(
+    this.root = document.querySelector(o), this.queue = [], this.watchers = {}, this._state = {}, this._stateWatchers = {}, this.store = new Proxy(
       {},
       {
-        set: (s, a, o) => {
+        set: (t, e, a) => {
           var i, c;
-          if (s[a] = o, !isNaN(a) || a === "length") {
-            this._saveStore(s), subscribers.forEach((d) => d(s));
-            const u = (i = f._storeInstanceMap) == null ? void 0 : i.get(this._storeName), l = (c = u == null ? void 0 : u._storeWatchers) == null ? void 0 : c[a];
-            l && l.forEach((d) => {
-              var n;
-              d(o, (n = u._getRuntime) == null ? void 0 : n.call(u, document.body));
+          if (t[e] = a, !isNaN(e) || e === "length") {
+            this._saveStore(t), subscribers.forEach((f) => f(t));
+            const h = (i = g._storeInstanceMap) == null ? void 0 : i.get(this._storeName), d = (c = h == null ? void 0 : h._storeWatchers) == null ? void 0 : c[e];
+            d && d.forEach((f) => {
+              var u;
+              f(a, (u = h._getRuntime) == null ? void 0 : u.call(h, document.body));
             });
           }
           return !0;
         },
-        get: (s, a) => s[a]
+        get: (t, e) => t[e]
       }
     ), setTimeout(() => this._runQueue(), 0);
   }
-  text(e, t) {
-    const r = this.root.querySelector(`[r-text="${e}"]`) || this.root.querySelector(`[data-r-text="${e}"]`);
-    r && (r.textContent = t);
+  text(o, s) {
+    const r = this.root.querySelector(`[r-text="${o}"]`) || this.root.querySelector(`[data-r-text="${o}"]`);
+    r && (r.textContent = s);
   }
   loop() {
-    const e = this.root.querySelector("[r-loop]");
-    if (!e) return { effect: () => {
-    }, bind: {} };
-    const t = e.parentElement, r = e.cloneNode(!0), s = {
-      click: []
-    }, a = {
-      effect: (o, i = []) => {
-        const c = (u) => {
-          t.querySelectorAll("[data-r-loop-item]").forEach((l) => l.remove()), u.forEach((l, d) => {
-            const n = r.cloneNode(!0);
-            n.removeAttribute("r-loop"), n.setAttribute("data-r-loop-item", ""), n.setAttribute("data-r-item", JSON.stringify(l)), i.forEach((m) => {
-              const _ = n.querySelector(`[r-text="${m}"]`);
-              _ && (_.textContent = l[m]);
-            }), s.click.forEach(({ selector: m, handler: _ }) => {
-              n.querySelectorAll(m).forEach((g) => {
-                g.addEventListener("click", () => {
-                  const p = this._getRuntime(g);
-                  _(d, p);
+    const o = this.root.querySelector("[r-loop]");
+    if (!o) return { effect: () => {
+    }, click: () => {
+    } };
+    const s = o.parentElement, r = o.cloneNode(!0), t = [], e = {
+      effect: (a, i = []) => {
+        const c = (h) => {
+          s.querySelectorAll("[data-r-loop-item]").forEach((d) => d.remove()), h.forEach((d, f) => {
+            const u = r.cloneNode(!0);
+            u.removeAttribute("r-loop"), u.setAttribute("data-r-loop-item", ""), u.setAttribute("data-r-item", JSON.stringify(d)), i.forEach((_) => {
+              const m = u.querySelector(`[r-text="${_}"]`);
+              m && (m.textContent = d[_]);
+            }), t.forEach(({ selector: _, handler: m }) => {
+              u.querySelectorAll(_).forEach((l) => {
+                l.addEventListener("click", () => {
+                  const q = this._getRuntime(l);
+                  m(f, q);
                 });
               });
-            }), t.appendChild(n);
+            }), s.appendChild(u);
           });
         };
-        return o != null && o.__subscribe && o.__subscribe(c), c(o), e.remove(), a;
+        return a != null && a.__subscribe && a.__subscribe(c), c(a), o.remove(), e;
       },
-      bind: {
-        click: (o) => (i) => (console.log("✅ registered bind.click for", o), s.click.push({ selector: o, handler: i }), a)
-      }
+      click: (a) => (i) => (t.push({ selector: a, handler: i }), e)
     };
-    return a;
+    return e;
   }
-  _initStore(e) {
-    let t = null;
+  _initStore(o) {
+    let s = null;
     if (this._useLocalStorage) {
-      const o = localStorage.getItem(this._storeName);
-      if (o)
+      const a = localStorage.getItem(this._storeName);
+      if (a)
         try {
-          t = JSON.parse(o);
+          s = JSON.parse(a);
         } catch {
           console.warn(
-            "📚 Recipe Failed to parse localStorage data for store:",
+            "📚 Recipe Failed to parse localStorage for store:",
             this._storeName
           );
         }
     }
-    const r = t || e, s = [], a = new Proxy([...r], {
-      set: (o, i, c) => {
-        var u;
-        if (o[i] = c, !isNaN(i) || i === "length") {
-          this._saveStore(o), s.forEach((d) => d(o));
-          const l = (u = this._storeWatchers) == null ? void 0 : u[i];
-          l && l.forEach((d) => {
-            var n;
-            d(c, (n = this._getRuntime) == null ? void 0 : n.call(this, document.body));
+    const r = s || o, t = [], e = new Proxy([...r], {
+      set: (a, i, c) => {
+        var h;
+        if (a[i] = c, !isNaN(i) || i === "length") {
+          this._saveStore(a), t.forEach((f) => f(a));
+          const d = (h = this._storeWatchers) == null ? void 0 : h[i];
+          d && d.forEach((f) => {
+            var u;
+            f(c, (u = this._getRuntime) == null ? void 0 : u.call(this, document.body));
           });
         }
         return !0;
       },
-      get: (o, i) => i === "__subscribe" ? (c) => s.push(c) : o[i]
+      get: (a, i) => i === "__subscribe" ? (c) => t.push(c) : a[i]
     });
-    return this._saveStore(a), a;
+    return this._saveStore(e), e;
   }
-  _saveStore(e) {
-    this._useLocalStorage && localStorage.setItem(this._storeName, JSON.stringify(e));
+  _saveStore(o) {
+    this._useLocalStorage && localStorage.setItem(this._storeName, JSON.stringify(o));
   }
-  click(e) {
-    const t = this, r = (s) => (t.queue.push(() => {
-      (e ? t.root.querySelectorAll(e) : [t.root]).forEach((o, i) => {
-        if (!o) {
-          console.warn(
-            `📚 Recipe Element not found for direct selector: ${e}`
-          );
+  bindMouseEvent(o) {
+    const s = this;
+    return (r) => (s.queue.push(() => {
+      (o ? s.root.querySelectorAll(o) : [s.root]).forEach((e, a) => {
+        if (!e) {
+          console.warn(`📚 Recipe Element not found: ${o}`);
           return;
         }
-        o.addEventListener("click", () => {
-          const c = t._getRuntime(o);
-          s(i, c), r._label && t._dispatch(r._label, i, c);
+        e.addEventListener("click", () => {
+          const i = s._getRuntime(e);
+          r(i, a);
         });
       });
-    }), r);
-    return r.label = function(s) {
-      return r._label = s, r;
-    }, r;
+    }), s);
   }
-  bind(e, t) {
-    this.bindings[e] = (r, s) => {
-      t(r, s);
-    };
+  click(o) {
+    return this.bindMouseEvent(o);
   }
-  watch(e, t) {
-    this.watchers[e] = (r, s) => {
-      t(r, s);
-    };
+  mouseover(o) {
+    return this.bindMouseEvent(o);
   }
-  _dispatch(e, t, r) {
-    this.bindings[e] && this.bindings[e](t, r);
+  mouseout(o) {
+    return this.bindMouseEvent(o);
+  }
+  watch(o, s) {
+    this.watchers[o] = (r, t) => s(r, t);
   }
   _runQueue() {
-    this.queue.forEach((e) => e()), this.queue = [];
+    this.queue.forEach((o) => o()), this.queue = [];
   }
-  _getRuntime(e) {
-    const t = this;
+  _getRuntime(o) {
+    const s = this;
     return {
-      el: e,
+      el: o,
       class: {
-        add: (r) => e.classList.add(r),
-        remove: (r) => e.classList.remove(r)
+        add: (r) => o.classList.add(r),
+        remove: (r) => o.classList.remove(r)
       },
       q(r) {
-        const s = t.root || document;
-        return N(s.querySelectorAll(r));
+        const t = s.root || document;
+        return b(t.querySelectorAll(r), s);
       },
-      parent: {
-        data: {
-          set: (r, s) => {
-            t.store[r] = s, t.root.setAttribute(`data-${r}`, s);
-          },
-          get: (r) => t.store[r]
+      data: {
+        set: (r, t) => {
+          var e;
+          s._state[r] = t, o == null || o.setAttribute(`data-${r}`, t), (e = s._stateWatchers) != null && e[r] && s._stateWatchers[r].forEach((a) => a(t));
+        },
+        get: (r) => s._state[r],
+        watch: (r) => (t) => {
+          var e;
+          s._stateWatchers ?? (s._stateWatchers = {}), (e = s._stateWatchers)[r] ?? (e[r] = []), s._stateWatchers[r].push(t);
         }
+      },
+      parent(r) {
+        const t = r ? o.closest(r) : o.parentElement;
+        return {
+          data: {
+            set: (e, a) => {
+              var i;
+              s._state[e] = a, t == null || t.setAttribute(`data-${e}`, a), (i = s._stateWatchers) != null && i[e] && s._stateWatchers[e].forEach((c) => c(a));
+            },
+            get: (e) => s._state[e],
+            watch: (e) => (a) => {
+              var i;
+              s._stateWatchers ?? (s._stateWatchers = {}), (i = s._stateWatchers)[e] ?? (i[e] = []), s._stateWatchers[e].push(a);
+            }
+          }
+        };
       },
       getItem() {
-        const r = e.getAttribute("data-r-item");
-        if (!r) {
-          const s = e.closest("[data-r-item]");
-          if (s)
-            return JSON.parse(s.getAttribute("data-r-item"));
-        }
+        var t;
+        const r = o.getAttribute("data-r-item") || ((t = o.closest("[data-r-item]")) == null ? void 0 : t.getAttribute("data-r-item"));
         try {
-          return JSON.parse(r);
+          return r ? JSON.parse(r) : null;
         } catch {
-          return console.warn(
-            "📚 Recipe Failed to parse data-r-item attribute:",
-            r
-          ), null;
+          return console.warn("📚 Recipe Failed to parse data-r-item:", r), null;
         }
       }
     };
   }
 };
-b(f, "store", /* @__PURE__ */ new Map());
-let S = f;
-function N(h) {
+E(g, "store", /* @__PURE__ */ new Map());
+let S = g;
+const p = {};
+function b(n, o) {
+  const s = (o == null ? void 0 : o._stateWatchers) ?? p;
   return {
     class: {
-      add: (e) => h.forEach((t) => t.classList.add(e)),
-      remove: (e) => h.forEach((t) => t.classList.remove(e))
+      add(r) {
+        return n.forEach((t) => t.classList.add(r)), this;
+      },
+      remove(r) {
+        return n.forEach((t) => t.classList.remove(r)), this;
+      },
+      toggle(r) {
+        return n.forEach((t) => t.classList.toggle(r)), this;
+      }
     },
-    eq(e) {
-      const t = h[e];
+    data: {
+      set(r, t) {
+        return n.forEach((e) => {
+          e.setAttribute(`data-${r}`, t), s != null && s[r] && s[r].forEach((a) => a(t));
+        }), this;
+      },
+      get(r) {
+        var t;
+        return (t = n[0]) == null ? void 0 : t.getAttribute(`data-${r}`);
+      },
+      watch(r) {
+        return (t) => {
+          s[r] ?? (s[r] = []), s[r].push(t);
+        };
+      }
+    },
+    click(r) {
+      return n.forEach(
+        (t) => t.addEventListener("click", (e) => r(e, t))
+      ), this;
+    },
+    mouseover(r) {
+      return n.forEach(
+        (t) => t.addEventListener("mouseover", (e) => r(e, t))
+      ), this;
+    },
+    mouseout(r) {
+      return n.forEach(
+        (t) => t.addEventListener("mouseout", (e) => r(e, t))
+      ), this;
+    },
+    eq(r) {
+      const t = n[r];
       return {
+        el: t,
         class: {
-          add: (r) => t == null ? void 0 : t.classList.add(r),
-          remove: (r) => t == null ? void 0 : t.classList.remove(r)
+          add: (e) => (t == null || t.classList.add(e), this),
+          remove: (e) => (t == null || t.classList.remove(e), this),
+          toggle: (e) => (t == null || t.classList.toggle(e), this)
         },
-        text: (r, s) => {
-          const a = (t == null ? void 0 : t.querySelector(`[r-text="${r}"]`)) || (t == null ? void 0 : t.querySelector(`[data-r-text="${r}"]`));
-          a && (a.textContent = s);
+        text(e, a) {
+          const i = (t == null ? void 0 : t.querySelector(`[r-text="${e}"]`)) || (t == null ? void 0 : t.querySelector(`[data-r-text="${e}"]`));
+          i && (i.textContent = a);
+        },
+        data: {
+          set: (e, a) => (t == null || t.setAttribute(`data-${e}`, a), s != null && s[e] && s[e].forEach((i) => i(a)), this),
+          get: (e) => t == null ? void 0 : t.getAttribute(`data-${e}`),
+          watch: (e) => (a) => {
+            s[e] ?? (s[e] = []), s[e].push(a);
+          }
         }
       };
     },
-    text: (e, t) => {
-      h.forEach((r) => {
-        r.textContent = t;
+    text(r, t) {
+      n.forEach((e) => {
+        if (e.getAttribute("r-text") === r || e.getAttribute("data-r-text") === r) {
+          e.textContent = t;
+          return;
+        }
+        const a = e.querySelector(`[r-text="${r}"]`) || e.querySelector(`[data-r-text="${r}"]`);
+        a && (a.textContent = t);
       });
     }
   };
 }
+window.$r = {
+  q(n) {
+    return b(document.querySelectorAll(n));
+  },
+  getItem() {
+    return null;
+  }
+};
 export {
   S as Recipe
 };
